@@ -1,4 +1,4 @@
-﻿using Finam.TradeApi.Proto.V1;
+using Finam.TradeApi.Proto.V1;
 using FinamClient;
 using System;
 using System.Collections.Concurrent;
@@ -45,6 +45,8 @@ namespace OrderBookScreener.Connectors
             _config = (Config)args[0];
             _client = new FinamApi(_config.Token!);
             _client.EventResponse += x => _events.Add(x);
+            _client.Error += ex => Error?.Invoke(ex);
+            _client.ConnectionStatusChanged += status => Message?.Invoke($"Connection: {status}");
             Task.Run(ProcessEvents);
         }
 
@@ -106,6 +108,9 @@ namespace OrderBookScreener.Connectors
 
         public void Dispose()
         {
+            _timerUpdateExtraData?.Dispose();
+            _client?.Dispose();
+            _events?.Dispose();
             _moneys.Clear();
             _positons.Clear();
             _order.Clear();
