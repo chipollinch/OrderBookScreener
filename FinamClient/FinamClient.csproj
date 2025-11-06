@@ -8,14 +8,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Protobuf Include="proto\tradeapi\v1\*.proto" GrpcServices="Client" />
-	<Protobuf Include="grpc\tradeapi\v1\*.proto" GrpcServices="Client" />
+    <Protobuf Include="proto\tradeapi\v1\*.proto" GrpcServices="Client" ProtoRoot="." />
+    <Protobuf Include="grpc\tradeapi\v1\*.proto" GrpcServices="Client" ProtoRoot="." />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Google.Protobuf" Version="3.22.3" />
-    <PackageReference Include="Grpc.Net.Client" Version="2.52.0" />
-    <PackageReference Include="Grpc.Tools" Version="2.54.0">
+    <PackageReference Include="Google.Api.CommonProtos" Version="2.17.0" PrivateAssets="All" />
+    <PackageReference Include="Google.Protobuf" Version="3.31.1" />
+    <PackageReference Include="Grpc.Net.Client" Version="2.70.0" />
+    <PackageReference Include="Grpc.Tools" Version="2.68.1">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
