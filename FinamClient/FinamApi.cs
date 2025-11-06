@@ -1,7 +1,8 @@
-﻿using Finam.TradeApi.Grpc.V1;
+using Finam.TradeApi.Grpc.V1;
 using Finam.TradeApi.Proto.V1;
 using Grpc.Core;
 using Grpc.Net.Client;
+using static Finam.TradeApi.Grpc.V1.Candles;
 using static Finam.TradeApi.Grpc.V1.Events;
 using static Finam.TradeApi.Grpc.V1.Orders;
 using static Finam.TradeApi.Grpc.V1.Portfolios;
@@ -24,6 +25,7 @@ namespace FinamClient
         private readonly EventsClient _eventsClient;
         private readonly OrdersClient _ordersClient;
         private readonly StopsClient _stopsClient;
+        private readonly CandlesClient _candlesClient;
         private readonly Metadata _metadata;
         private readonly AsyncDuplexStreamingCall<SubscriptionRequest, Event> _eventsStream;
         private readonly object _lock = new();
@@ -47,6 +49,7 @@ namespace FinamClient
             _eventsClient = new EventsClient(_channel);
             _ordersClient = new OrdersClient(_channel);
             _stopsClient = new StopsClient(_channel);
+            _candlesClient = new CandlesClient(_channel);
 
             _eventsStream = _eventsClient.GetEvents(_metadata);
             RunStream(_eventsStream.ResponseStream);
@@ -207,6 +210,52 @@ namespace FinamClient
                     RequestId = requestId
                 }
             }).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Отправка keep-alive запроса для поддержания активного соединения
+        /// </summary>
+        public async Task SendKeepAliveAsync(string? requestId = null)
+        {
+            await _eventsStream.RequestStream.WriteAsync(new SubscriptionRequest()
+            {
+                KeepAliveRequest = new KeepAliveRequest
+                {
+                    RequestId = requestId ?? GetRandomId()
+                }
+            }).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Получение дневных свечей
+        /// </summary>
+        public async Task<GetDayCandlesResult> GetDayCandlesAsync(string secBoard, string secCode,
+            DayCandleTimeFrame timeFrame, DayCandleInterval interval)
+        {
+            var res = await _candlesClient.GetDayCandlesAsync(new GetDayCandlesRequest()
+            {
+                SecurityBoard = secBoard,
+                SecurityCode = secCode,
+                TimeFrame = timeFrame,
+                Interval = interval
+            }, _metadata).ConfigureAwait(false);
+            return res;
+        }
+
+        /// <summary>
+        /// Получение внутридневных свечей
+        /// </summary>
+        public async Task<GetIntradayCandlesResult> GetIntradayCandlesAsync(string secBoard, string secCode,
+            IntradayCandleTimeFrame timeFrame, IntradayCandleInterval interval)
+        {
+            var res = await _candlesClient.GetIntradayCandlesAsync(new GetIntradayCandlesRequest()
+            {
+                SecurityBoard = secBoard,
+                SecurityCode = secCode,
+                TimeFrame = timeFrame,
+                Interval = interval
+            }, _metadata).ConfigureAwait(false);
+            return res;
         }
 
         /// <summary>
